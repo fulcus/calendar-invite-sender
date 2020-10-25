@@ -13,8 +13,9 @@ from xlutils.copy import copy
 FIRST_NAME_COL = 0
 LAST_NAME_COL = 1
 EMAIL_COL = 2
-START_DATETIME_COL = 3
-MEET_LINK_COL = 4
+START_DATE_COL = 3
+START_TIME_COL = 4
+MEET_LINK_COL = 5
 
 
 def authorize():
@@ -71,6 +72,10 @@ def create_event(service, first_name, last_name, email, start_datetime):
     meet_link = event.get('conferenceData')['entryPoints'][0]['uri']
     return meet_link
 
+#date format input: 2020-10-28
+#time format input: 09:00
+def convert_datetime(date, time):
+    return date + "T" + time + ":00+01:00"
 
 def main():
 
@@ -89,15 +94,16 @@ def main():
             first_name = r_sheet.cell_value(row, FIRST_NAME_COL)
         except IndexError:
             break
+
         last_name = r_sheet.cell_value(row, LAST_NAME_COL)
         email = r_sheet.cell_value(row, EMAIL_COL)
-        start_datetime = r_sheet.cell_value(row, START_DATETIME_COL)
+        start_date = r_sheet.cell_value(row, START_DATE_COL)
+        start_time = r_sheet.cell_value(row, START_TIME_COL)
 
-        # exit when there aren't any candidates left
         print(f"Row {row}. Name: {first_name} {last_name}")
 
         meet_link = create_event(service, first_name, last_name,
-                                 email, start_datetime)
+                                 email, convert_datetime(start_date, start_time))
 
         w_sheet.write(row, MEET_LINK_COL, meet_link)
         wb.save('excel/output.xls')
