@@ -1,5 +1,6 @@
 from __future__ import print_function
 import datetime
+import dateutil.parser
 import pickle
 import os.path
 from googleapiclient.discovery import build
@@ -13,8 +14,7 @@ FIRST_NAME_COL = 0
 LAST_NAME_COL = 1
 EMAIL_COL = 2
 START_DATETIME_COL = 3
-END_DATETIME_COL = 4
-MEET_LINK_COL = 5
+MEET_LINK_COL = 4
 
 
 def authorize():
@@ -42,7 +42,13 @@ def authorize():
     return creds
 
 
-def create_event(service, first_name, last_name, email, start_datetime, end_datetime):
+def create_event(service, first_name, last_name, email, start_datetime):
+
+    # end_datetime = start_datetime + 1h
+    start_dt = dateutil.parser.parse(start_datetime)
+    end_datetime = start_dt + datetime.timedelta(hours=1)
+    end_datetime = end_datetime.isoformat()
+
     event = {"summary": first_name + " " + last_name,
              "start": {
                  "dateTime": start_datetime,
@@ -76,8 +82,9 @@ def main():
     creds = authorize()
     service = build('calendar', 'v3', credentials=creds)
 
-    # for each candidate
-    for row in range(1, 4):
+    # for each row until first empty row
+    row = 1
+    while True:
         try:
             first_name = r_sheet.cell_value(row, FIRST_NAME_COL)
         except IndexError:
@@ -85,13 +92,12 @@ def main():
         last_name = r_sheet.cell_value(row, LAST_NAME_COL)
         email = r_sheet.cell_value(row, EMAIL_COL)
         start_datetime = r_sheet.cell_value(row, START_DATETIME_COL)
-        end_datetime = r_sheet.cell_value(row, END_DATETIME_COL)
 
         # exit when there aren't any candidates left
         print(f"Row {row}. Name: {first_name} {last_name}")
 
         meet_link = create_event(service, first_name, last_name,
-                                 email, start_datetime, end_datetime)
+                                 email, start_datetime)
 
         w_sheet.write(row, MEET_LINK_COL, meet_link)
         wb.save('excel/output.xls')
