@@ -44,8 +44,12 @@ def authorize():
 
 def create_event(service, first_name, last_name, email, start_datetime, end_datetime):
     event = {"summary": first_name + " " + last_name,
-             "start": {"dateTime": start_datetime},
-             "end": {"dateTime": end_datetime},
+             "start": {
+                 "dateTime": start_datetime,
+             },
+             "end": {
+                 "dateTime": end_datetime,
+             },
              "attendees": [
                  {'email': email},
              ],
